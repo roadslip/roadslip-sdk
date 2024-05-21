@@ -1,0 +1,28 @@
+# .gitignore file for a TypeScript React SDK project
+
+# Ignore node_modules directory
+node_modules/
+
+# Ignore build output directory
+build/
+
+# Ignore distribution directory
+dist/
+
+# Ignore any environment files
+.env
+
+# Ignore any npm debug logs
+npm-debug.log
+
+# Ignore any TypeScript configuration files
+tsconfig.json
+tsconfig.build.json
+
+# Ignore any editor-specific files
+.vscode/
+
+# Ignore desktop files
+.DS_Store
+desktop.ini
+Thumbs.db
