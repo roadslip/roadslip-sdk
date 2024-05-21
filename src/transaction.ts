@@ -13,8 +13,7 @@ export type TransactionData = {
     timestamp: number
 }
 
-export async function getTransactionData(signature: string, rpcUrl?: string, devnet: boolean = false) {
-
+export async function getFullyEnrichedTransactionData(signature: string, rpcUrl?: string, devnet: boolean = false) {
     let connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
     let bonfidaConnection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
 
@@ -26,6 +25,17 @@ export async function getTransactionData(signature: string, rpcUrl?: string, dev
         connection = new Connection(rpcUrl, 'confirmed');
         bonfidaConnection = new Connection(rpcUrl, 'confirmed');
     }
+
+    const basicData = await getBasicTransactionData(signature, connection);
+    if(!basicData) {
+        return undefined;
+    }
+    const enrichedData = await enrichTransactionData(basicData, bonfidaConnection);
+
+    return enrichedData;
+}
+
+export async function getBasicTransactionData(signature: string, connection: Connection) {
 
   try {
     // Fetch the transaction details
@@ -89,45 +99,48 @@ export async function getTransactionData(signature: string, rpcUrl?: string, dev
         }
     }
 
-    const senderPubKey = new PublicKey(result.sender);
-    const receiverDomainKey = new PublicKey(result.receiver);
-    try {
-        result.senderDomain = (await getFavoriteDomain(bonfidaConnection, senderPubKey)).reverse;
-        if(!result.senderDomain) {
-            const domains = await getAllDomains(bonfidaConnection, senderPubKey);
-            result.receiverDomain = await reverseLookup(bonfidaConnection, domains[0]);
-        }
-        if(result.senderDomain){
-            const recordV2Key = await getRecordV2(bonfidaConnection, result.senderDomain, Record.Pic);
-            const dataString = (recordV2Key.retrievedRecord.data.toString());
-            const picUrl = dataString.substring(dataString.indexOf('http'))
-            result.senderImageUrl = picUrl;
-        }
-        
-    } catch (error) {
-        //do nothing
-    }
-
-    try {
-        result.receiverDomain = (await getFavoriteDomain(bonfidaConnection, receiverDomainKey)).reverse
-        if(!result.receiverDomain) {
-            const domains = await getAllDomains(bonfidaConnection, receiverDomainKey);
-            result.receiverDomain = await reverseLookup(bonfidaConnection, domains[0]);
-        }
-
-        if(result.receiverDomain){
-            const recordV2Key = await getRecordV2(bonfidaConnection, result.receiverDomain, Record.Pic);
-            const dataString = (recordV2Key.retrievedRecord.data.toString());
-            const picUrl = dataString.substring(dataString.indexOf('http'))
-            result.receiverImageUrl = picUrl;
-        }
-    } catch (error) {
-        //do nothing
-    }
-
     return result;
 
   } catch (error) {
     console.error('Error fetching transaction data:', error);
   }
+}
+
+export async function enrichTransactionData(data: TransactionData, connection: Connection) {
+
+    try {
+        data.senderDomain = await getDomainForPubKey(data.sender, connection);
+        if(data.senderDomain){
+            data.senderImageUrl = await getPicUrlForDomain(data.senderDomain, connection);
+        }
+    } catch (error) {
+        //do nothing
+    }
+
+    try {
+        data.receiverDomain = await getDomainForPubKey(data.receiver, connection);
+        if(data.receiverDomain){
+            data.receiverImageUrl = await getPicUrlForDomain(data.receiverDomain, connection);
+        }
+    } catch (error) {
+        //do nothing
+    }
+    return data
+}
+
+export async function getDomainForPubKey(pubKey: string, connection: Connection) {
+    const domainPubkey = new PublicKey(pubKey);
+    let domain = (await getFavoriteDomain(connection, domainPubkey)).reverse
+    if(!domain) {
+        const domains = await getAllDomains(connection, domainPubkey);
+       domain = await reverseLookup(connection, domains[0]);
+    }
+    return domain
+}
+
+export async function getPicUrlForDomain(domain: string, connection: Connection) {
+    const recordV2Key = await getRecordV2(connection, domain, Record.Pic);
+    const dataString = (recordV2Key.retrievedRecord.data.toString());
+    const picUrl = dataString.substring(dataString.indexOf('http'))
+    return picUrl;
 }
