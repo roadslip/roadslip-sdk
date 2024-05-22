@@ -1,7 +1,7 @@
 {
   "name": "roadslip-sdk",
   "version": "1.0.0",
-  "description": "",
+  "description": "Render a payslip for a transaction on solana",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,6 +10,18 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@solana/web3.js": "^1.91.8"
+    "@solana/web3.js": "^1.91.8",
+    "@types/node": "^20.12.12",
+    "canvas": "^2.11.2",
+    "fs": "^0.0.1-security",
+    "node-html-to-image": "^4.0.0",
+    "path": "^0.12.7",
+    "qrcode": "^1.5.3",
+    "roadslip-sdk": "^0.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.5"
   }
 }
