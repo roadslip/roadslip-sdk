@@ -7,7 +7,8 @@ import {
   reverseLookup,
 } from "@bonfida/spl-name-service";
 import { createCanvas, loadImage } from "canvas";
-import QRCode from "qrcode";
+import { toDataURL } from 'qrcode';
+
 
 export type TransactionData = {
   sender: string;
@@ -236,7 +237,7 @@ export async function createTransactionImage(
   const ctx = canvas.getContext("2d");
 
   const explorer = "https://explorer.solana.com/tx/";
-  const qrCodeDataURL = await QRCode.toDataURL(
+  const qrCodeDataURL = await toDataURL(
     explorer + transaction.transaction,
     {
       width: 250,
@@ -295,7 +296,7 @@ export async function createTransactionImage(
   ctx.font = "bold 16px Arial";
   ctx.fillText("Amount:", 20, 280);
   ctx.font = "16px Arial";
-  ctx.fillText("$5.13", 20, 305);
+  ctx.fillText("$" + transaction.amount.toFixed(2), 20, 305);
 
   // QR Code
   ctx.drawImage(qrCode, width - 135, 200, 123, 123);
@@ -325,9 +326,9 @@ export async function createTransactionImage(
   return image.toString("base64");
 }
 
-export async function createPayslip(transactionHash: string) {
+export async function createPayslip(transactionHash: string, rpcUrl?: string, devnet: boolean = false) {
   const transactionData = await getFullyEnrichedTransactionData(
-    transactionHash
+    transactionHash, rpcUrl, devnet
   );
 
   if (!transactionData) {

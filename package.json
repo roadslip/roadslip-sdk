@@ -1,6 +1,6 @@
 {
   "name": "roadslip-sdk",
-  "version": "0.2.0",
+  "version": "0.2.6",
   "description": "Renders an image of a human readable receipt (payslip) for a given transaction hash on the Solana blockchain",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
