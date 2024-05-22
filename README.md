@@ -2,13 +2,12 @@
 
 ## Description
 
-Roadslip SDK renders a human-readable receipt (payslip) for a given transaction hash on the Solana blockchain.
+Roadslip SDK renders a human-readable receipt (payslip) for a given transaction hash of a USDC transfer on the Solana blockchain.
 
 ## Features
 
-- Generate transaction images with QR codes.
-- Fetch and display user domains and avatars.
-- Supports Solana mainnet and devnet.
+- Generate human readable transaction images with QR codes to verify the transaction on a block explorer if needed.
+- Fetch and display user domains and avatars by leveraging SNS.
 
 ## Installation
 
@@ -19,18 +18,36 @@ npm install roadslip-sdk
 ## Usage
 
 ```typescript
-import { createPayslip } from "roadslip-sdk";
+import { createPayslip } from 'roadslip-sdk';
+import * as fs from 'fs';
 
-async function generatePayslip(transactionHash: string) {
-  try {
-    const payslip = await createPayslip(transactionHash);
-    console.log("Payslip generated:", payslip);
-  } catch (error) {
-    console.error("Error generating payslip:", error);
-  }
+function saveBase64Image(base64Data: string, filePath: string) {
+    // Remove the data URL prefix if present
+    const base64Prefix = /^data:image\/jpeg;base64,/;
+    if (base64Prefix.test(base64Data)) {
+        base64Data = base64Data.replace(base64Prefix, '');
+    }
+
+    // Convert the base64 string to a Buffer
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+
+    // Write the Buffer to a file
+    fs.writeFile(filePath, imageBuffer, (err) => {
+        if (err) {
+            console.error('Error saving the image:', err);
+        } else {
+            console.log('Image saved successfully to', filePath);
+        }
+    });
 }
 
-generatePayslip("your-transaction-hash");
+async function main() {
+    const transactionSignature = 'insert-your-usdc-transfer-transaction-hash-here'
+    const imageData = await createPayslip(transactionSignature, undefined, true); //for testnet transaction with sns resolution on mainnet - for mainnet just remove last two parameters - use second parameter if you want to use custom rpc url
+    saveBase64Image(imageData, 'output.jpeg');
+}
+
+main();
 ```
 
 ## API
@@ -41,7 +58,7 @@ Generates a payslip image for the given transaction hash.
 
 ### `getFullyEnrichedTransactionData(signature: string, rpcUrl?: string, devnet?: boolean): Promise<TransactionData | undefined>`
 
-Fetches and enriches transaction data.
+Fetches and enriches transaction data. Useful if you just want the info but do the rendering yourself.
 
 ## Types
 
@@ -59,6 +76,15 @@ type TransactionData = {
   transaction: string;
   timestamp: number;
 };
+```
+
+## Dependencies
+
+```
+@solana/web3.js
+@bonfida/spl-name-service
+canvas
+qrcode
 ```
 
 ## License

@@ -22,6 +22,14 @@ export type TransactionData = {
   timestamp: number;
 };
 
+/**
+ * Fetches and enriches transaction data with domain and image information.
+ * 
+ * @param {string} signature - The transaction signature to pull the payslip data for.
+ * @param {string} [rpcUrl] - Optional RPC URL - uses the default cluster urls if not set.
+ * @param {boolean} [devnet=false] - Use devnet if true, default is false - still uses mainnet-beta cluster for sns lookups.
+ * @returns {Promise<TransactionData | undefined>} The enriched transaction data.
+ */
 export async function getFullyEnrichedTransactionData(
   signature: string,
   rpcUrl?: string,
@@ -54,6 +62,13 @@ export async function getFullyEnrichedTransactionData(
   return enrichedData;
 }
 
+/**
+ * Fetches basic transaction data including participants and balances.
+ * 
+ * @param {string} signature - The transaction signature.
+ * @param {Connection} connection - The Solana connection object.
+ * @returns {Promise<TransactionData | undefined>} The basic transaction data.
+ */
 export async function getBasicTransactionData(
   signature: string,
   connection: Connection
@@ -127,6 +142,14 @@ export async function getBasicTransactionData(
   }
 }
 
+/**
+ * Enriches transaction data with domain and image information from solana name service (SNS) if available - leaves the fields empty if
+ * it does not exist.
+ * 
+ * @param {TransactionData} data - The basic transaction data. Needs to contain sender and receiver to generate the 
+ * @param {Connection} connection - The Solana connection object.
+ * @returns {Promise<TransactionData>} The enriched transaction data.
+ */
 export async function enrichTransactionData(
   data: TransactionData,
   connection: Connection
@@ -157,6 +180,13 @@ export async function enrichTransactionData(
   return data;
 }
 
+/**
+ * Retrieves the SNS domain name associated with a public key.
+ * 
+ * @param {string} pubKey - The public key as a string.
+ * @param {Connection} connection - The Solana connection object.
+ * @returns {Promise<string>} The associated domain name.
+ */
 export async function getDomainForPubKey(
   pubKey: string,
   connection: Connection
@@ -170,6 +200,13 @@ export async function getDomainForPubKey(
   return domain;
 }
 
+/**
+ * Retrieves the picture URL associated with a domain in SNS if available.
+ * 
+ * @param {string} domain - The domain name.
+ * @param {Connection} connection - The Solana connection object.
+ * @returns {Promise<string>} The URL of the picture.
+ */
 export async function getPicUrlForDomain(
   domain: string,
   connection: Connection
@@ -180,7 +217,12 @@ export async function getPicUrlForDomain(
   return picUrl;
 }
 
-// Generate the payslip
+/**
+ * Shortens a string to a maximum length, adding ellipsis in the middle if needed.
+ * 
+ * @param {string} str - The string to shorten.
+ * @returns {string} The shortened string.
+ */
 function shortenString(str: string): string {
   if (str.length <= 8) {
     return str;
@@ -188,10 +230,23 @@ function shortenString(str: string): string {
   return `${str.slice(0, 4)}....${str.slice(-4)}`;
 }
 
+/**
+ * Gets the user name based on wallet address and domain. If the domain is provided .sol 
+ * 
+ * @param {string} walletAddress - The wallet address.
+ * @param {string} [domain] - The domain name.
+ * @returns {string} The user name.
+ */
 function getUserName(walletAddress: string, domain?: string) {
   return domain ? `${domain}.sol` : shortenString(walletAddress);
 }
 
+/**
+ * Generates an avatar for a given wallet address.
+ * 
+ * @param {string} walletAddress - The wallet address.
+ * @returns {string} The avatar image as a base64 string.
+ */
 function generateAvatar(walletAddress: string): string {
   const canvas = createCanvas(300, 300);
   const ctx = canvas.getContext("2d");
@@ -224,10 +279,23 @@ function generateAvatar(walletAddress: string): string {
   return canvas.toDataURL(); // Returns a base64 PNG
 }
 
+/**
+ * Retrieves the user image based on wallet address and optional image URL.
+ * 
+ * @param {string} walletAddress - The wallet address.
+ * @param {string} [imageUrl] - The image URL.
+ * @returns {Promise<Canvas.Image>} The user image.
+ */
 async function getUserImage(walletAddress: string, imageUrl?: string) {
   return loadImage(imageUrl ?? generateAvatar(walletAddress));
 }
 
+/**
+ * Creates an image representing the transaction details.
+ * 
+ * @param {TransactionData} transaction - The transaction data.
+ * @returns {Promise<string>} The transaction image as a base64 string.
+ */
 export async function createTransactionImage(
   transaction: TransactionData
 ): Promise<string> {
@@ -326,6 +394,15 @@ export async function createTransactionImage(
   return image.toString("base64");
 }
 
+/**
+ * Creates a payslip image for a given USDC transfer transaction.
+ * 
+ * @param {string} transactionHash - The transaction hash.
+ * @param {string} [rpcUrl] - Optional RPC URL - uses the default cluster urls if not set.
+ * @param {boolean} [devnet=false] - Use devnet if true, default is false - still uses mainnet-beta cluster for sns lookups.
+ * @returns {Promise<string>} The payslip image as a base64 string.
+ * @throws {Error} If the transaction data is not found.
+ */
 export async function createPayslip(transactionHash: string, rpcUrl?: string, devnet: boolean = false) {
   const transactionData = await getFullyEnrichedTransactionData(
     transactionHash, rpcUrl, devnet
