@@ -1,22 +1,32 @@
 {
   "name": "roadslip-sdk",
-  "version": "0.1.0",
-  "description": "",
+  "version": "0.2.0",
+  "description": "Renders an image of a human readable receipt (payslip) for a given transaction hash on the Solana blockchain",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "solana",
+    "payslip",
+    "qrcode",
+    "payment",
+    "transaction",
+    "web3"
+  ],
+  "author": "roadslip",
   "license": "MIT",
   "dependencies": {
     "@bonfida/spl-name-service": "^2.5.2",
-    "@solana/web3.js": "^1.91.8"
+    "@solana/web3.js": "^1.91.8",
+    "canvas": "^2.11.2",
+    "qrcode": "^1.5.3"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "@types/qrcode": "^1.5.5"
   }
 }
